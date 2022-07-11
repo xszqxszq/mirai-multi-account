@@ -1,3 +1,4 @@
+val VERSION_NAME: String by project
 plugins {
     kotlin("multiplatform") version "1.6.10"
     `java-library`
@@ -6,7 +7,8 @@ plugins {
 }
 
 group = "xyz.xszq"
-version = "v1.0.0"
+version = VERSION_NAME
+
 
 repositories {
     mavenCentral()
@@ -33,46 +35,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
             }
-        }
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
-            }
-            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-        }
-    }
-    publications {
-        register("mavenJava", MavenPublication::class) {
-            artifactId = "mirai-multi-account"
-            from(components["java"])
-            pom {
-                name.set("mirai-multi-account")
-                description.set("A library helping mirai plugins to filter duplicate events")
-                url.set("https://github.com/xszqxszq/mirai-multi-account")
-
-                licenses {
-                    license {
-                        name.set("GNU AGPLv3")
-                        url.set("https://github.com/xszqxszq/mirai-multi-account/blob/main/LICENSE")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("xszq")
-                        name.set("xszqxszq")
-                        email.set("943551369@qq.com")
-                    }
-                }
-            }
-            artifact(tasks.sourcesJar.get())
-            artifact(tasks.jar.get())
         }
     }
 }
