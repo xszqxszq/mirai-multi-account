@@ -4,10 +4,8 @@ plugins {
     `java-library`
     `maven-publish`
     signing
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
-
-group = "xyz.xszq"
-version = VERSION_NAME
 
 buildscript {
     repositories {
@@ -17,6 +15,9 @@ buildscript {
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.20.0")
     }
 }
+
+group = "xyz.xszq"
+version = VERSION_NAME
 
 repositories {
     gradlePluginPortal()
