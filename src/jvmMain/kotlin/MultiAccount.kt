@@ -19,7 +19,7 @@ import java.util.*
  */
 class EventValidator(private val bufSize: Int = 128) {
     private val recentMessageSigns: MutableList<String> = Collections.synchronizedList(mutableListOf<String>())
-    private val lock = Mutex() // TODO: Might reduce throughput, improvement needed
+    private val lock = Mutex() // TODO: Improvement needed
 
     /**
      * Check if this event is already received from other account. If not, insert in to the list.
@@ -54,6 +54,10 @@ class EventValidator(private val bufSize: Int = 128) {
     }
 }
 
+/**
+ * Generate a channel which won't send duplicate events to multiple accounts.
+ * @param validator The validator to use
+ */
 fun EventChannel<Event>.validate(validator: EventValidator): EventChannel<Event> {
     return filter { validator.notExistAndPush(it) }
 }
