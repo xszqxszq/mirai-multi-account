@@ -9,8 +9,17 @@ plugins {
 group = "xyz.xszq"
 version = VERSION_NAME
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.vanniktech:gradle-maven-publish-plugin:0.20.0")
+    }
+}
 
 repositories {
+    gradlePluginPortal()
     mavenCentral()
 }
 
@@ -38,3 +47,5 @@ kotlin {
         }
     }
 }
+
+apply(plugin="com.vanniktech.maven.publish")
