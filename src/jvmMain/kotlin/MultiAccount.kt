@@ -4,22 +4,53 @@ package xyz.xszq
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.event.Event
 import net.mamoe.mirai.event.EventChannel
-import net.mamoe.mirai.event.events.GroupMessageEvent
-import net.mamoe.mirai.event.events.GroupMuteAllEvent
-import net.mamoe.mirai.event.events.MemberJoinEvent
-import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.event.GlobalEventChannel
+import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.data.source
-import java.util.*
 
 /**
  * This validator can prevent events being received by multiple account for multiple times.
  * @param bufSize The size of recent signatures buffer
  */
 class EventValidator(private val bufSize: Int = 128) {
-    private val recentMessageSigns: MutableList<String> = Collections.synchronizedList(mutableListOf<String>())
+    /** Recent message signatures buffer **/
+    private val recentMessageSigns = mutableListOf<String>()
+    /** Lock ensuring concurrency **/
     private val lock = Mutex() // TODO: Improvement needed
+    /**
+     * Bot list.
+     * Collecting Bot instead of their ids because there can be bots with different protocols but have the same id.
+     */
+    private val bots = mutableListOf<Bot>()
+
+    init {
+        // Add new bot info to list
+        GlobalEventChannel.subscribeAlways<BotOnlineEvent> {
+            lock.withLock {
+                if (bots.none { it.id == bot.id && it.configuration.protocol == bot.configuration.protocol })
+                    bots.add(bot)
+            }
+        }
+        // Remove if it is offline
+        GlobalEventChannel.subscribeAlways<BotOfflineEvent> {
+            lock.withLock {
+                bots.removeIf {
+                    it.id == bot.id && it.configuration.protocol == bot.configuration.protocol
+                }
+            }
+        }
+    }
+
+    /**
+     * Check if this event is sent by other bots.
+     * @param event The event to check
+     */
+    fun notByBot(event: Event): Boolean {
+        return event is MessageEvent && bots.none { it.id == event.sender.id }
+    }
 
     /**
      * Check if this event is already received from other account. If not, insert in to the list.
@@ -59,5 +90,5 @@ class EventValidator(private val bufSize: Int = 128) {
  * @param validator The validator to use
  */
 fun EventChannel<Event>.validate(validator: EventValidator): EventChannel<Event> {
-    return filter { validator.notExistAndPush(it) }
+    return filter { validator.notByBot(it) && validator.notExistAndPush(it) }
 }
