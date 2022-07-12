@@ -49,7 +49,7 @@ class EventValidator(private val bufSize: Int = 128) {
      * @param event The event to check
      */
     fun notByBot(event: Event): Boolean {
-        return event is MessageEvent && bots.none { it.id == event.sender.id }
+        return event !is MessageEvent || bots.none { it.id == event.sender.id }
     }
 
     /**
