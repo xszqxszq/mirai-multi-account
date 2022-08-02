@@ -17,7 +17,7 @@ import net.mamoe.mirai.message.data.source
  */
 class EventValidator(private val bufSize: Int = 128) {
     /** Recent message signatures buffer **/
-    private val recentMessageSigns = mutableListOf<String>()
+    private val recentMessageSigns = mutableListOf<Pair<String, Long>>()
     /** Lock ensuring concurrency **/
     private val lock = Mutex() // TODO: Improvement needed
     /**
@@ -58,11 +58,11 @@ class EventValidator(private val bufSize: Int = 128) {
      */
     suspend fun notExistAndPush(event: Event): Boolean {
         val id = getEventSign(event)
-        if (id == "") {
+        if (id.first == "") {
             return true
         }
         lock.withLock {
-            if (!recentMessageSigns.contains(id)) {
+            if (recentMessageSigns.none { it.first == id.first && it.second != id.second }) {
                 recentMessageSigns.add(id)
                 if (recentMessageSigns.size > bufSize)
                     recentMessageSigns.removeFirst()
@@ -76,12 +76,12 @@ class EventValidator(private val bufSize: Int = 128) {
      * Generate signature for an event.
      * @param event Target event
      */
-    fun getEventSign(event: Event): String = when (event) {
-        is MessageEvent -> (if (event is GroupMessageEvent) "g" else "m") +
-                "#${event.subject.id}#${event.message.source.ids.first()}"
-        is MemberJoinEvent -> "j#${event.groupId}#${event.member.id}"
-        is GroupMuteAllEvent -> "mu#${event.groupId}#${event.new}"
-        else -> ""
+    fun getEventSign(event: Event): Pair<String, Long> = when (event) {
+        is MessageEvent -> Pair((if (event is GroupMessageEvent) "g" else "m") +
+                "#${event.subject.id}#${event.message.source.ids.first()}", event.bot.id)
+        is MemberJoinEvent -> Pair("j#${event.groupId}#${event.member.id}", event.bot.id)
+        is GroupMuteAllEvent -> Pair("mu#${event.groupId}#${event.new}", event.bot.id)
+        else -> Pair("", 0)
     }
 }
 
