@@ -24,7 +24,7 @@ class EventValidator(private val bufSize: Int = 128) {
      * Bot list.
      * Collecting Bot instead of their ids because there can be bots with different protocols but have the same id.
      */
-    private val bots = mutableListOf<Bot>()
+    val bots = mutableListOf<Bot>()
 
     init {
         // Add new bot info to list
