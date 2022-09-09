@@ -66,7 +66,7 @@ class EventValidator {
      * Check if the group need to assign a bot, and assign the specified one.
      */
     fun checkAndAssign(group: Group, bot: Bot) {
-        if (!botForGroup.containsKey(group.id) || bots.none { b -> b.id == botForGroup[b.id] })
+        if (!botForGroup.containsKey(group.id) || bots.none { b -> b.id == botForGroup[group.id] })
             botForGroup[group.id] = bot.id
     }
 
@@ -94,6 +94,10 @@ class EventValidator {
      * @param event The event to check
      */
     fun isBotDedicated(event: Event): Boolean = when (event) {
+        is BotJoinGroupEvent -> true
+        is BotLeaveEvent -> true
+        is BotMuteEvent -> true
+        is BotGroupPermissionChangeEvent -> true
         is GroupEvent -> event.bot.id == botForGroup[event.group.id]
         else -> true
     }
